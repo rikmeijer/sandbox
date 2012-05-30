@@ -1,7 +1,7 @@
 <?php
 require_once __DIR__ . '/common.inc';
 
-function write_query_update($queries_out, $table_name, $mssql_connection) {
+function write_query_update($queries_out, $table_name, array $inserted_identifiers, $mssql_connection, $progressor) {
 	static $skipped_tables = array(
 		'CON_LOG', 
 		'CON_LOG_ID'
@@ -37,9 +37,19 @@ function write_query_update($queries_out, $table_name, $mssql_connection) {
 					'{$column['COLUMN_NAME']}' AS ID_COLUMN_NAME
 				FROM [{$table_name}]
 			", $mssql_connection);
-			if (mssql_num_rows($identifier_item_query) > 0) {
+			if (array_key_exists($table_name . "." . $column['COLUMN_NAME'], $inserted_identifiers)) {
+				$identifier_item = array(
+					'ID' => $inserted_identifiers[$table_name . "." . $column['COLUMN_NAME']],
+					'ID_COLUMN_NAME' => $column['COLUMN_NAME'],
+				);
+			} elseif (mssql_num_rows($identifier_item_query) > 0) {
 				$identifier_item = mssql_fetch_assoc($identifier_item_query);
 			}
+		} elseif (array_key_exists($table_name . "." . $column['COLUMN_NAME'], $inserted_identifiers)) {
+			$identifier_item = array(
+				'ID' => $inserted_identifiers[$table_name . "." . $column['COLUMN_NAME']],
+				'ID_COLUMN_NAME' => $column['COLUMN_NAME'],
+			);
 		} elseif (!isset($dummy_column)) {
 			$dummy_column = $column;
 		}
@@ -70,10 +80,10 @@ function write_query_update($queries_out, $table_name, $mssql_connection) {
 	
 	$skipped_tables[] = $table_name;
 	
-	return true;
+	return $progressor($table_name);
 }
 
-function write_query_insert($queries_out, $table_name, $mssql_connection) {
+function write_query_insert($queries_out, $table_name, array &$inserted_identifiers, $mssql_connection, $progressor) {
 	static $skipped_tables = array(
 		'CON_LOG', 
 		'CON_LOG_ID'
@@ -435,10 +445,16 @@ INSERT INTO REL_GESLACHT
 			continue;
 		}
 		
+		$changes[$column['COLUMN_NAME']] = null;
 		if (stripos($column['TYPE_NAME'], 'IDENTITY') !== false) {
 			$identity = true;
+			$inserted_identifiers[$table_name . "." . $column['COLUMN_NAME']] = &$changes[$column['COLUMN_NAME']];
 			list($type,  $identity_identifier) = explode(" ", $column['TYPE_NAME']);
 		} else {
+			if ($column['COLUMN_NAME'] === 'CODE') {
+				$inserted_identifiers[$table_name . "." . $column['COLUMN_NAME']] = &$changes[$column['COLUMN_NAME']];
+			}
+			
 			$type = $column['TYPE_NAME'];
 		}
 		
@@ -458,7 +474,7 @@ INSERT INTO REL_GESLACHT
 			if (mssql_num_rows($random_item_query) === 0) {
 				$fk_variable = "@{$foreign_key['FKTABLE_NAME']}_" . $foreign_key['FK_NAME'] . "_ID";
 				if (isset($custom_fk_items[$fk_variable])) {
-				} elseif (write_query_insert($queries_out, $foreign_key['PKTABLE_NAME'], $mssql_connection) === false) {
+				} elseif (write_query_insert($queries_out, $foreign_key['PKTABLE_NAME'], $inserted_identifiers, $mssql_connection, $progressor) === false) {
 					// assume item to be created during this transaction
 					$changes[$column['COLUMN_NAME']] = "(
 						SELECT TOP 1 {$foreign_key['PKCOLUMN_NAME']}
@@ -573,7 +589,7 @@ INSERT INTO REL_GESLACHT
 	fwrite($queries_out, PHP_EOL);
 	if (array_key_exists($table_name, $special_tables)) {
 		fwrite($queries_out, PHP_EOL . $special_tables[$table_name]);
-	} elseif ($identity === true) {
+	} elseif ($identity === true) {	
 		fwrite($queries_out, PHP_EOL . "SET IDENTITY_INSERT [{$table_name}] ON;");
 		fwrite($queries_out, PHP_EOL . "INSERT INTO {$table_name}" . PHP_EOL . chr(9) . chr(9) . "([" . join("]" . PHP_EOL . chr(9) . chr(9) . ",[", array_keys($changes)) . "])" . PHP_EOL . chr(9) . "VALUES" . PHP_EOL . chr(9) . chr(9) . "(" . join(PHP_EOL . chr(9) . chr(9) . ",", $changes) . ");");
 		fwrite($queries_out, PHP_EOL . "SET IDENTITY_INSERT [{$table_name}] OFF;");
@@ -583,17 +599,8 @@ INSERT INTO REL_GESLACHT
 	
 	$skipped_tables[] = $table_name;
 	
-	return true;
+	return $progressor($table_name);
 }
-
-if (!isset($_SERVER['argv'][2])) {
-	exit('arg #2 missing: please supply queries file');
-} elseif (!isset($_SERVER['argv'][1])) {
-	exit('arg #1 missing: please supply mode (insert|update)');
-}
-
-
-$queries_out = fopen($_SERVER['argv'][2], 'w');
 
 $rio_live_770_connection = mssql_connect('LOCALHOST\sql2008', 'sysdba', 'masterkey');
 mssql_select_db('RIO_LIVE_770', $rio_live_770_connection);
@@ -610,24 +617,28 @@ if ($tables_query === false) {
 	error('tables query failed');
 }
 
-$query_progressor = create_progressor('generating queries...', mssql_num_rows($tables_query));
-fwrite($queries_out, PHP_EOL . "BEGIN TRANSACTION T1;");
+$query_insert_progressor = create_progressor('generating insert queries...', mssql_num_rows($tables_query));
+$inserted_identifiers = array();
+$queries_insert_out = fopen('C:/queries-insert.sql', 'w');
+// fwrite($queries_insert_out, PHP_EOL . "BEGIN TRANSACTION T1;");
 while ($table = mssql_fetch_assoc($tables_query)) {
-	switch ($_SERVER['argv'][1]) {
-		case "insert":
-			if (write_query_insert($queries_out, $table['TABLE_NAME'], $rio_live_770_connection) === true) {
-				$query_progressor($table['TABLE_NAME']);
-			}
-			break;
-			
-		case "update":
-			if (write_query_update($queries_out, $table['TABLE_NAME'], $rio_live_770_connection) === true) {
-				$query_progressor($table['TABLE_NAME']);
-			}
-			break;
-	}
-
+	write_query_insert($queries_insert_out, $table['TABLE_NAME'], $inserted_identifiers, $rio_live_770_connection, $query_insert_progressor);
 }
-fwrite($queries_out, PHP_EOL . "COMMIT TRANSACTION T1;");
+// fwrite($queries_insert_out, PHP_EOL . "COMMIT TRANSACTION T1;");
+fclose($queries_insert_out);
+
+mssql_data_seek($tables_query, 0);
+
+var_dump($inserted_identifiers);
+
+$query_update_progressor = create_progressor('generating update queries...', mssql_num_rows($tables_query));
+$queries_update_out = fopen('C:/queries-update.sql', 'w');
+// fwrite($queries_update_out, PHP_EOL . "BEGIN TRANSACTION T1;");
+while ($table = mssql_fetch_assoc($tables_query)) {
+	write_query_update($queries_update_out, $table['TABLE_NAME'], $inserted_identifiers, $rio_live_770_connection, $query_update_progressor);
+}
+// fwrite($queries_update_out, PHP_EOL . "COMMIT TRANSACTION T1;");
+fclose($queries_update_out);
+
 mssql_close($rio_live_770_connection);
 line('done');

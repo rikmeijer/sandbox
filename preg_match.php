@@ -6,6 +6,16 @@ preg_match('/(column)[@\.#]([^\/]+)(\/|$)/', "column@state/column", $matches);
 
 var_dump($matches);
 
+$html ='
+		<foreach variable="fff">
+			<h1>??</h1>
+		</foreach>
+		';
+$html = preg_replace_callback('/\<(?P<tag>foreach)(?P<attributes_raw>(\s+(?:\w+=(?:\w|"[^"]*")))+)?\s*\>(?P<content>.*(?!\<\1))\<\/\1\>/s', function(array $match) {
+echo 'ff';
+	var_dump($match);
+	return '';
+}, $html);
 
 preg_match("/(?<options>[^\w]+)?(" . preg_quote("inactief") . ")(@(?<state>[^\/]+))?(\/|$)/", "inactief", $property_matches);
 var_dump($property_matches);

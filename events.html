@@ -1,0 +1,24 @@
+<!--
+To change this template, choose Tools | Templates
+and open the template in the editor.
+-->
+<!DOCTYPE html>
+<html>
+	<head>
+		<title></title>
+		<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+	</head>
+	<body>
+		<div>TODO write content</div>
+		
+		<input type="text" id="event_input" />
+		<script>
+			document.getElementById('event_input').onblur = function(e) {
+				alert('blurred!');
+			};
+			document.getElementById('event_input').onchange = function(e) {
+				alert('changed!');
+			};
+		</script>
+	</body>
+</html>

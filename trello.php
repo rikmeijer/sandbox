@@ -1,0 +1,193 @@
+<?php
+
+define('APPLICATION_NAME', 'CallSys2Trello');
+define('TRELLO_KEY', 'a7ab3aef72c3abdca38671d4655cf206');
+define('TRELLO_SECRET', '5b80cc2824d8c779bcafc05d9b148d0207fe3ffd0f163d6c549c192cfa0c71ca');
+define('TRELLO_TOKEN', 'b1fbeb9c751740b5e2e2fa0a1f28990e6b7ed6427ef041b4308d4dc62bd5c561');
+define('TRELLO_BOARD_ID', '5076dcabc7a93c314e00762f');
+define('TRELLO_CHECKLIST_ID', 'CallSys calls');
+
+function trello_getCardCallChecklist($idCard) {
+	$url = 'https://api.trello.com/1/cards/' . $idCard . '/checklists?key=' . urlencode(TRELLO_KEY) . '&token=' . urlencode(TRELLO_TOKEN);
+	$trello_Checklists =  json_decode(file_get_contents($url), true);
+	
+	foreach ($trello_Checklists as $trello_Checklist) {
+		if ($trello_Checklist['name'] === TRELLO_CHECKLIST_ID) {
+			return $trello_Checklist;
+		}
+		
+	}
+	return false;
+}
+
+function trello_deleteCardCallChecklist($idCard) {
+	$checklist = trello_getCardCallChecklist($idCard);
+	if ($checklist === false) {
+		return true;
+	}
+	
+	$url = 'https://api.trello.com/1/checklists/' . $checklist['id'] . '?key=' . urlencode(TRELLO_KEY) . '&token=' . urlencode(TRELLO_TOKEN);
+	$ch = curl_init($url);
+
+	curl_setopt($ch, CURLOPT_CUSTOMREQUEST, 'DELETE');
+	curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode(array()));
+	curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+
+	$response = curl_exec($ch);
+	curl_close($ch);
+
+	return true; // eval response?
+}
+
+function trello_addChecklist($name, $idCard) {
+	$url = 'https://api.trello.com/1/checklists/?name=' . urlencode($name) . '&idBoard=' . TRELLO_BOARD_ID . '&idCard=' . urlencode($idCard) . '&key=' . urlencode(TRELLO_KEY) . '&token=' . urlencode(TRELLO_TOKEN);
+	$ch = curl_init($url);
+
+	curl_setopt($ch, CURLOPT_POST, 1);
+	curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode(array()));
+	curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+
+	$response = curl_exec($ch);
+	curl_close($ch);
+
+	return json_decode($response, true);
+}
+
+function trello_checklist_addItem($idChecklist, $name, $checked) {
+	$url = 'https://api.trello.com/1/checklists/' . $idChecklist . '/checkItems?name=' . urlencode($name) . '&checked=' . ($checked ? 'true' : 'false') . '&key=' . urlencode(TRELLO_KEY) . '&token=' . urlencode(TRELLO_TOKEN);
+	$ch = curl_init($url);
+
+	curl_setopt($ch, CURLOPT_POST, 1);
+	curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode(array()));
+	curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+
+	$response = curl_exec($ch);
+	curl_close($ch);
+
+	return json_decode($response, true);
+}
+function trello_checklist_deleteItem($idChecklist, $idChecklistItem) {
+	$url = 'https://api.trello.com/1/checklists/' . $idChecklist . '/checkItems/' . $idChecklistItem . '?key=' . urlencode(TRELLO_KEY) . '&token=' . urlencode(TRELLO_TOKEN);
+	$ch = curl_init($url);
+
+	curl_setopt($ch, CURLOPT_CUSTOMREQUEST, 'DELETE');
+	curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode(array()));
+	curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+
+	$response = curl_exec($ch);
+	curl_close($ch);
+
+	return true;
+}
+
+function trello_getCards() {
+	$url = 'https://api.trello.com/1/boards/' . TRELLO_BOARD_ID . '/cards?key=' . urlencode(TRELLO_KEY) . '&token=' . urlencode(TRELLO_TOKEN);
+	return json_decode(file_get_contents($url), true);
+}
+
+function callsys_getCalls() {
+	$url = 'http://callsys.saa.lan/callsys/index.php?mod=call&md=1';
+	
+	$ch = curl_init($url);
+
+	curl_setopt($ch, CURLAUTH_BASIC, 1);
+	curl_setopt($ch, CURLOPT_USERPWD, 'r_meijer:U(05 nZtCd');
+	curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+	curl_setopt($ch, CURLOPT_COOKIESESSION, TRUE);
+	curl_setopt($ch, CURLOPT_HEADER, 0);
+	curl_setopt($ch, CURLOPT_COOKIEFILE, "cookiefile");
+	curl_setopt($ch, CURLOPT_COOKIEJAR, "cookiefile");
+	curl_setopt($ch, CURLOPT_COOKIE, session_name() . '=' . session_id());
+	curl_setopt($ch, CURLOPT_FOLLOWLOCATION, 1); 
+
+
+	curl_exec($ch);
+	
+	curl_setopt($ch, CURLOPT_URL, 'http://callsys.saa.lan/callsys/index.php?mod=call&md=1&ac=DESC&sort=agendadatum&zoeksubmit=zoek&callnummer=&text_value=&status_id=&afdeling_id=3&admin=&prioriteit=&categorie_id=6&gebruikersnaam=&gebruiker_kantoor=&gebruiker_afdeling=&agendadatum=');
+	
+	
+	$response = curl_exec($ch);
+	
+	curl_close($ch);
+
+	ini_set('xdebug.scream', 0);
+	$doc = new DOMDocument();
+	$doc->strictErrorChecking = FALSE;
+	@$doc->loadHTML($response);
+	$xml = simplexml_import_dom($doc);
+	ini_set('xdebug.scream', 1);
+	
+	$calls = array();
+	foreach ($xml->xpath("//table[@class='overzicht']/tr[@class='list'] | //table[@class='overzicht']/tr[@class='listswitch']") as $call_row) {
+		$title = (string)$call_row->td[2]->a;
+		if (preg_match('/^\[\#(?P<shortIdCard>\d+)\]\s*(?P<titleReal>.*)$/', $title, $matches) === 1) {
+			$calls[(string)$call_row->td[0]->a] = array(
+				'shortIdCard' => $matches['shortIdCard'],
+				'status' => (string)$call_row->td[1]->a,
+				'title' => $matches['titleReal'],
+				'prioriteit' => (string)$call_row->td[3]->a,
+				'agenda-datum' => (string)$call_row->td[5]->a,
+				'behandelaar' => (string)$call_row->td[6]->a
+			);
+		}
+	}
+	return $calls;
+}
+
+echo PHP_EOL . 'retrieving calls from callsys...';
+$found = 0;
+$callsys_cards_by_trello_card = array();
+foreach (callsys_getCalls() as $call_identifier => $call) {
+	$found++;
+	if (!isset($callsys_cards_by_trello_card[$call['shortIdCard']])) {
+		$callsys_cards_by_trello_card[$call['shortIdCard']] = array();
+	}
+	$callsys_cards_by_trello_card[$call['shortIdCard']][$call_identifier] = $call;
+}
+echo $found . ' found';
+
+if (empty($callsys_cards_by_trello_card)) {
+	
+	echo PHP_EOL . 'no calls linked to trello cards...';
+	
+} else {
+	echo PHP_EOL . 'adding calls to trello cards...';
+	foreach (trello_getCards() as $trello_card) {
+		if (!isset($callsys_cards_by_trello_card[$trello_card['idShort']])) {
+			echo PHP_EOL . 'no items for card #' . $trello_card['idShort'] . ' (' . $trello_card['name'] .'), removing any CallSys-checklist...';
+			trello_deleteCardCallChecklist($trello_card['id']);
+			continue;
+		}
+		
+		$trello_Checklist =  trello_getCardCallChecklist($trello_card['id']);
+		if ($trello_Checklist === false) {
+			echo PHP_EOL . 'no calls checklist for card #' . $trello_card['idShort'] . ' (' . $trello_card['name'] .'), adding checklist...';
+			$trello_Checklist = trello_addChecklist(TRELLO_CHECKLIST_ID, $trello_card['id']);
+		}
+
+		// does it already exist an a checklist?
+
+		foreach ($callsys_cards_by_trello_card[$trello_card['idShort']] as $callsys_card_identifier => $callsys_card) {
+			echo PHP_EOL . 'is call ' . $callsys_card_identifier . ' already on card?...';
+			$found = false;
+			foreach ($trello_Checklist['checkItems'] as $trello_Checklist_Checkitem) {
+				if (preg_match('/^\[' . $callsys_card_identifier . '\]/', $trello_Checklist_Checkitem['name'], $matches) === 1) {
+					trello_checklist_deleteItem($trello_Checklist['id'], $trello_Checklist_Checkitem['id']);
+					$found = true;
+				}
+			}
+			if ($found === false) {
+				echo PHP_EOL . 'no, adding call ' . $callsys_card_identifier . ' to card #' . $trello_card['idShort'] . ' (' . $trello_card['name'] .')...';
+				trello_checklist_addItem($trello_Checklist['id'], '[' . $callsys_card_identifier . '] ' . $callsys_card['title'], $callsys_card['status'] === 'Gesloten');
+			} else {
+				echo PHP_EOL . 'yes, "updating" call ' . $callsys_card_identifier . ' on card #' . $trello_card['idShort'] . ' (' . $trello_card['name'] .')...';
+				trello_checklist_addItem($trello_Checklist['id'], '[' . $callsys_card_identifier . '] ' . $callsys_card['title'], $callsys_card['status'] === 'Gesloten');
+			}
+			
+		}
+
+	}
+}
+
+echo PHP_EOL . 'done';
+echo PHP_EOL;

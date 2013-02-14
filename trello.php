@@ -180,30 +180,55 @@ if (empty($callsys_cards_by_trello_card)) {
 
 		foreach ($callsys_cards_by_trello_card[$trello_card['idShort']] as $callsys_card_identifier => $callsys_card) {
 			
+			$checklistItemName = '[' . $callsys_card_identifier . '] ' . $callsys_card['title'];
+			
 			echo PHP_EOL . 'is call ' . $callsys_card_identifier . ' already on any card?...';
-			$found = false;
+			$found = array();
 			foreach (trello_getCardCallChecklists() as $trello_Checklist) {
 				foreach ($trello_Checklist['checkItems'] as $trello_Checklist_Checkitem) {
 					if (preg_match('/^\[' . $callsys_card_identifier . '\]/', $trello_Checklist_Checkitem['name'], $matches) === 1) {
-						trello_checklist_deleteItem($trello_Checklist['id'], $trello_Checklist_Checkitem['id']);
-						$found = $trello_Checklist;
+						$found[] = array(
+							'item' => $trello_Checklist_Checkitem,
+							'checklist' => $trello_Checklist
+						);
 					}
 				}
 				
 			}
 			
-			if ($found === false) {
+			if (empty($found)) {
 				echo PHP_EOL . 'no, adding call ' . $callsys_card_identifier . ' to card #' . $trello_card['idShort'] . ' (' . $trello_card['name'] .')...';
-				
-			} elseif ($found['id'] !== $trello_CardChecklist['id']) {
-				echo PHP_EOL . 'yes, "moving" call ' . $callsys_card_identifier . ' to card #' . $trello_card['idShort'] . ' (' . $trello_card['name'] .')...';
-				
+				trello_checklist_addItem($trello_CardChecklist['id'], '[' . $callsys_card_identifier . '] ' . $callsys_card['title'], $callsys_card['status'] === 'Gesloten');
+
 			} else {
-				echo PHP_EOL . 'yes, "updating" call ' . $callsys_card_identifier . ' on card #' . $trello_card['idShort'] . ' (' . $trello_card['name'] .')...';
+				$changed = false;
+				foreach ($found as $found_Checklist) {
+					if ($found_Checklist['checklist']['id'] !== $trello_CardChecklist['id']) {
+						echo PHP_EOL . 'yes, "moving" call ' . $callsys_card_identifier . ' to card #' . $trello_card['idShort'] . ' (' . $trello_card['name'] .')...';
+						trello_checklist_deleteItem($found_Checklist['checklist']['id'], $found_Checklist['item']['id']);
+						$changed = true;
+						
+					} elseif ($found_Checklist['item']['name'] !== $checklistItemName) {
+						echo PHP_EOL . 'yes, "updating" call ' . $callsys_card_identifier . ' on card #' . $trello_card['idShort'] . ' (' . $trello_card['name'] .')...';
+						trello_checklist_deleteItem($found_Checklist['checklist']['id'], $found_Checklist['item']['id']);
+						$changed = true;
+						
+					} elseif ($found_Checklist['item']['state'] !== 'incomplete' && $callsys_card['status'] === 'Gesloten') {
+						echo PHP_EOL . 'yes, "updating" call ' . $callsys_card_identifier . ' on card #' . $trello_card['idShort'] . ' (' . $trello_card['name'] .')...';
+						trello_checklist_deleteItem($found_Checklist['checklist']['id'], $found_Checklist['item']['id']);
+						$changed = true;
+						
+					} else {
+						echo PHP_EOL . 'yes, but no change is required...';
+						
+					}
+				}
 				
+				if ($changed) {
+					trello_checklist_addItem($trello_CardChecklist['id'], $checklistItemName, $callsys_card['status'] === 'Gesloten');
+				}
 			}
 			
-			trello_checklist_addItem($trello_CardChecklist['id'], '[' . $callsys_card_identifier . '] ' . $callsys_card['title'], $callsys_card['status'] === 'Gesloten');
 			
 		}
 

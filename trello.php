@@ -196,12 +196,12 @@ if (empty($callsys_cards_by_trello_card)) {
 				
 			}
 			
+			$changed = false;
 			if (empty($found)) {
 				echo PHP_EOL . 'no, adding call ' . $callsys_card_identifier . ' to card #' . $trello_card['idShort'] . ' (' . $trello_card['name'] .')...';
-				trello_checklist_addItem($trello_CardChecklist['id'], '[' . $callsys_card_identifier . '] ' . $callsys_card['title'], $callsys_card['status'] === 'Gesloten');
+				$changed = true;
 
 			} else {
-				$changed = false;
 				foreach ($found as $found_Checklist) {
 					if ($found_Checklist['checklist']['id'] !== $trello_CardChecklist['id']) {
 						echo PHP_EOL . 'yes, "moving" call ' . $callsys_card_identifier . ' to card #' . $trello_card['idShort'] . ' (' . $trello_card['name'] .')...';
@@ -223,12 +223,11 @@ if (empty($callsys_cards_by_trello_card)) {
 						
 					}
 				}
-				
-				if ($changed) {
-					trello_checklist_addItem($trello_CardChecklist['id'], $checklistItemName, $callsys_card['status'] === 'Gesloten');
-				}
 			}
-			
+
+			if ($changed) {
+				trello_checklist_addItem($trello_CardChecklist['id'], $checklistItemName, $callsys_card['status'] === 'Gesloten');
+			}
 			
 		}
 

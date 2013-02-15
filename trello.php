@@ -179,8 +179,6 @@ if (empty($callsys_cards_by_trello_card)) {
 		}
 
 		foreach ($callsys_cards_by_trello_card[$trello_card['idShort']] as $callsys_card_identifier => $callsys_card) {
-			
-			
 			switch ($callsys_card['status']) {
 				case 'Lopend':
 				case 'Behandelen':
@@ -194,8 +192,8 @@ if (empty($callsys_cards_by_trello_card)) {
 					break;
 				
 				case 'Gesloten':
-					$checklistItemChecked = $callsys_card['status'] === 'Gesloten';
 					$checklistItemState = '';
+					$checklistItemChecked = true;
 					break;
 				
 				default:
@@ -237,7 +235,7 @@ if (empty($callsys_cards_by_trello_card)) {
 						trello_checklist_deleteItem($found_Checklist['checklist']['id'], $found_Checklist['item']['id']);
 						$changed = true;
 						
-					} elseif ($found_Checklist['item']['state'] !== 'incomplete' && $checklistItemChecked) {
+					} elseif (($found_Checklist['item']['state'] !== 'incomplete') !== $checklistItemChecked) {
 						echo PHP_EOL . 'yes, "updating" call ' . $callsys_card_identifier . ' on card #' . $trello_card['idShort'] . ' (' . $trello_card['name'] .')...';
 						trello_checklist_deleteItem($found_Checklist['checklist']['id'], $found_Checklist['item']['id']);
 						$changed = true;

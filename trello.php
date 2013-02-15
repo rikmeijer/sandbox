@@ -185,10 +185,12 @@ if (empty($callsys_cards_by_trello_card)) {
 				case 'Lopend':
 				case 'Behandelen':
 					$checklistItemState = '';
+					$checklistItemChecked = false;
 					break;
 				
 				case 'Open':
 					$checklistItemState = '*'; // new
+					$checklistItemChecked = false;
 					break;
 				
 				case 'Gesloten':
@@ -198,6 +200,7 @@ if (empty($callsys_cards_by_trello_card)) {
 				
 				default:
 					$checklistItemState = '#'; // on-hold
+					$checklistItemChecked = false;
 					break;
 			}
 			

@@ -197,7 +197,7 @@ if (empty($callsys_cards_by_trello_card)) {
 					break;
 				
 				default:
-					$checklistItemState = chr(236); // on-hold
+					$checklistItemState = '#'; // on-hold
 					break;
 			}
 			

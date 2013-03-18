@@ -124,6 +124,10 @@ function callsys_getCalls() {
 	
 	curl_close($ch);
 
+	if (empty($response)) {
+		return array();
+	}
+	
 	ini_set('xdebug.scream', 0);
 	$doc = new DOMDocument();
 	$doc->strictErrorChecking = FALSE;
@@ -161,7 +165,7 @@ foreach (callsys_getCalls() as $call_identifier => $call) {
 echo $found . ' found';
 
 if (empty($callsys_cards_by_trello_card)) {
-	echo PHP_EOL . 'no calls linked to trello cards...';
+	echo PHP_EOL . 'no calls linked to trello cards or unable to reach callsys...';
 	
 } else {
 	echo PHP_EOL . 'adding calls to trello cards...';
@@ -202,7 +206,7 @@ if (empty($callsys_cards_by_trello_card)) {
 					break;
 			}
 			
-			$checklistItemName = '[' . $callsys_card_identifier . '] ' . (!empty($checklistItemState) ? $checklistItemState . ' ' : '') . $callsys_card['title'];
+			$checklistItemName = '[' . $callsys_card_identifier . '] ' . (!empty($checklistItemState) ? $checklistItemState . ' ' : '') . $callsys_card['title'] . ' (' . $callsys_card['behandelaar'] . ')';
 			
 			echo PHP_EOL . 'is call ' . $callsys_card_identifier . ' already on any card?...';
 			$found = array();

@@ -1,3 +1,3 @@
 <?php
-$string = 'ZZ';
+$string = 'hello-error-0';
 echo ++$string;

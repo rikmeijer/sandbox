@@ -138,7 +138,7 @@ function callsys_getCalls() {
 	$calls = array();
 	foreach ($xml->xpath("//table[@class='overzicht']/tr[@class='list'] | //table[@class='overzicht']/tr[@class='listswitch']") as $call_row) {
 		$title = (string)$call_row->td[2]->a;
-		if (preg_match('/^\[\#(?P<shortIdCard>\d+)\]\s*(?P<titleReal>.*)$/', $title, $matches) === 1) {
+		if (preg_match('/^\[?\#(?P<shortIdCard>\d+)\]?\s*(?P<titleReal>.*)$/', $title, $matches) === 1) {
 			$calls[(string)$call_row->td[0]->a] = array(
 				'shortIdCard' => $matches['shortIdCard'],
 				'status' => (string)$call_row->td[1]->a,

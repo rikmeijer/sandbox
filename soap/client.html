@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+    <head>
+        <meta charset="utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+        <title></title>
+        <meta name="description" content="">
+        <meta name="viewport" content="width=device-width">
+    </head>
+    <body>
+		<div id="container"></div>
+
+		<script>
+			
+		function event_handler() {
+			var a, events_registered, event_identifiers;
+
+			event_identifiers = arguments; //.slice(1);
+
+			events_registered = {};
+			for (a = 0; a < event_identifiers.length; a += 1) {
+				events_registered[event_identifiers[a]] = [];
+			}
+
+			return {
+				"declare" : function (event_identifier) {
+					if (events_registered[event_identifier] !== undefined) {
+						throw new Error('Event ' + event_identifier + ' already exists');
+					}
+
+					events_registered[event_identifier] = [];
+				},
+				"clear" : function (event_identifier) {
+					events_registered[event_identifier] = [];
+				},
+				"register" : function (event_identifier, callback) {
+					if (events_registered[event_identifier] === undefined) {
+						throw new Error('Event ' + event_identifier + ' is not supported.');
+					}
+					events_registered[event_identifier].push(callback);
+					return true;
+				},
+				"fire" : function (event_identifier) {
+					var h, args;
+
+					args = Array.prototype.slice.call(arguments, 1);
+
+					if (events_registered[event_identifier] === undefined) {
+						throw new Error('Event ' + event_identifier + ' should have been initialized.');
+					}
+
+					for (h = 0; h < events_registered[event_identifier].length; h += 1) {
+						events_registered[event_identifier][h].apply(events_registered[event_identifier][h], args);
+					}
+					return true;
+				}
+			};
+		}
+		
+		function requestData(method, resource_path) {
+			var events = event_handler('send', 'success', 'error');
+
+			events.register('send', function () {
+				var request = new XMLHttpRequest();
+				if (request.hasOwnProperty("withCredentials")) {
+					request.open(method, resource_path, true);
+					request.setRequestHeader("origin", window.location.href);
+				} else if (XDomainRequest !== undefined) {
+					request = new XDomainRequest();
+					request.open(method, resource_path);
+				} else {
+					throw new Error('no suitable xhr found');
+				}
+
+				request.onload = function () {
+					if (this.readyState !== 4) {
+						return false;
+					}
+
+					switch (this.status) {
+						case 0:
+							return false; // aborted connection
+						case 200:
+							return events.fire('success', this.responseText);
+						default:
+							return events.fire('error', this.status, this.statusText);
+					}
+				};
+
+				request.send.apply(request, arguments);
+			});
+
+			return events;
+		}
+		
+		events = requestData('GET', '/soap/server.php');
+		events.register('success', function(data) {
+			if (window.DOMParser)
+			  {
+			  parser=new DOMParser();
+			  xmlDoc=parser.parseFromString(data,"text/xml");
+			  }
+			else // Internet Explorer
+			  {
+			  xmlDoc=new ActiveXObject("Microsoft.XMLDOM");
+			  xmlDoc.async=false;
+			  xmlDoc.loadXML(data); 
+			  }
+			  
+			console.log(xmlDoc.getElementsByTagName('bookstore'));
+		});
+		events.fire('send');
+		</script>
+    </body>
+</html>

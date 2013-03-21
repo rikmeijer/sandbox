@@ -1,5 +1,8 @@
 <?php
 
+define('CALLSYS_USERNAME', 'r_meijer');
+define('CALLSYS_PASSWORD', 'TS,aglV!pk');
+
 define('APPLICATION_NAME', 'CallSys2Trello');
 define('TRELLO_KEY', 'a7ab3aef72c3abdca38671d4655cf206');
 define('TRELLO_SECRET', '5b80cc2824d8c779bcafc05d9b148d0207fe3ffd0f163d6c549c192cfa0c71ca');
@@ -99,13 +102,13 @@ function trello_getCards() {
 	return json_decode(file_get_contents($url), true);
 }
 
-function callsys_getCalls() {
+function callsys_getCalls($username, $password) {
 	$url = 'http://callsys.saa.lan/callsys/index.php?mod=call&md=1';
 	
 	$ch = curl_init($url);
 
 	curl_setopt($ch, CURLAUTH_BASIC, 1);
-	curl_setopt($ch, CURLOPT_USERPWD, 'r_meijer:U(05 nZtCd');
+	curl_setopt($ch, CURLOPT_USERPWD, $username . ':' . $password);
 	curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
 	curl_setopt($ch, CURLOPT_COOKIESESSION, TRUE);
 	curl_setopt($ch, CURLOPT_HEADER, 0);
@@ -155,7 +158,7 @@ function callsys_getCalls() {
 echo PHP_EOL . 'retrieving calls from callsys...';
 $found = 0;
 $callsys_cards_by_trello_card = array();
-foreach (callsys_getCalls() as $call_identifier => $call) {
+foreach (callsys_getCalls(CALLSYS_USERNAME, CALLSYS_PASSWORD) as $call_identifier => $call) {
 	$found++;
 	if (!isset($callsys_cards_by_trello_card[$call['shortIdCard']])) {
 		$callsys_cards_by_trello_card[$call['shortIdCard']] = array();

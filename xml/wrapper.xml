@@ -1,0 +1,8 @@
+<?xml version="1.0" standalone="no" ?>
+<doc xmlns:xi="http://www.w3.org/2001/XInclude">
+  <foo>
+	  <bar>
+		  <xi:include href="otherFile.xml"></xi:include>
+	  </bar>
+  </foo>
+</doc>

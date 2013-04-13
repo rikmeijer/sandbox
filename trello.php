@@ -1,14 +1,6 @@
 <?php
 
-define('CALLSYS_USERNAME', 'r_meijer');
-define('CALLSYS_PASSWORD', 'TS,aglV!pk');
-
-define('APPLICATION_NAME', 'CallSys2Trello');
-define('TRELLO_KEY', 'a7ab3aef72c3abdca38671d4655cf206');
-define('TRELLO_SECRET', '5b80cc2824d8c779bcafc05d9b148d0207fe3ffd0f163d6c549c192cfa0c71ca');
-define('TRELLO_TOKEN', 'b1fbeb9c751740b5e2e2fa0a1f28990e6b7ed6427ef041b4308d4dc62bd5c561');
-define('TRELLO_BOARD_ID', '5076dcabc7a93c314e00762f');
-define('TRELLO_CHECKLIST_ID', 'CallSys calls');
+require __DIR__ . '/../secrets.php';
 
 function trello_getCardCallChecklists() {
 	$url = 'https://api.trello.com/1/boards/' . TRELLO_BOARD_ID . '/checklists?key=' . urlencode(TRELLO_KEY) . '&token=' . urlencode(TRELLO_TOKEN);

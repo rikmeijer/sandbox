@@ -112,7 +112,7 @@ function callsys_getCalls($username, $password) {
 
 	curl_exec($ch);
 	
-	curl_setopt($ch, CURLOPT_URL, 'http://callsys.saa.lan/callsys/index.php?mod=call&md=1&ac=DESC&sort=agendadatum&zoeksubmit=zoek&callnummer=&text_value=&status_id=&afdeling_id=3&admin=&prioriteit=&categorie_id=6&gebruikersnaam=&gebruiker_kantoor=&gebruiker_afdeling=&agendadatum=');
+	curl_setopt($ch, CURLOPT_URL, 'http://callsys.saa.lan/callsys/index.php?mod=call&md=1&ac=DESC&sort=agendadatum&zoeksubmit=zoek&callnummer=&text_value=&status_id=&admin=&prioriteit=&categorie_id=6&gebruikersnaam=&gebruiker_kantoor=&gebruiker_afdeling=&agendadatum=');
 	
 	
 	$response = curl_exec($ch);
@@ -139,8 +139,8 @@ function callsys_getCalls($username, $password) {
 				'status' => (string)$call_row->td[1]->a,
 				'title' => $matches['titleReal'],
 				'prioriteit' => (string)$call_row->td[3]->a,
-				'agenda-datum' => (string)$call_row->td[5]->a,
-				'behandelaar' => (string)$call_row->td[6]->a
+				'agenda-datum' => (string)$call_row->td[6]->a,
+				'behandelaar' => (string)$call_row->td[7]->a
 			);
 		}
 	}

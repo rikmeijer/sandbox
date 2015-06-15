@@ -1,6 +1,8 @@
 import std.stdio;
+import foo;
 
 void main()
 {
-	writeln("Edit source/app.d to start your project.");
+	Foo foo = new Foo;
+	writeln(foo.greet());
 }

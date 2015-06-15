@@ -1,4 +1,4 @@
-module foo;
+module bar.foo;
 
 class Foo
 {

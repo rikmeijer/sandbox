@@ -4,5 +4,5 @@ import bar.foo;
 void main()
 {
 	Foo foo = new Foo;
-	writeln(foo.greet());
+	writeln(foo.greet("Rik"));
 }

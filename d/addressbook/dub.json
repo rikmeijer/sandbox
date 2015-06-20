@@ -1,8 +1,10 @@
 {
 	"name": "addressbook",
-	"description": "A minimal D application.",
+	"description": "A simple vibe.d server application.",
 	"copyright": "Copyright © 2015, rik",
 	"authors": ["rik"],
 	"dependencies": {
-	}
+		"vibe-d": "~>0.7.19"
+	},
+	"versions": ["VibeDefaultMain"]
 }

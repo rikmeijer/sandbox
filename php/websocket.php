@@ -1,6 +1,7 @@
 <?php
-log("Handshaking...");
-list($resource,$host,$origin) = getheaders($buffer);
+error_log("Handshaking...");
+$buffer = socket_read();
+list($resource,$host,$origin) = get_headers($buffer);
 $upgrade = "HTTP/1.1 101 Web Socket Protocol Handshake\r\n" .
 		"Upgrade: WebSocket\r\n" .
 		"Connection: Upgrade\r\n" .

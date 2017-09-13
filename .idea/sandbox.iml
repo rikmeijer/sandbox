@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<module type="WEB_MODULE" version="4">
+  <component name="NewModuleRootManager">
+    <content url="file://$MODULE_DIR$">
+      <sourceFolder url="file://$MODULE_DIR$/php" isTestSource="false" />
+    </content>
+    <orderEntry type="inheritedJdk" />
+    <orderEntry type="sourceFolder" forTests="false" />
+    <orderEntry type="module-library">
+      <library name="PHARS">
+        <CLASSES>
+          <root url="phar://$MODULE_DIR$/php/PHPExcel_1.7.9.phar/" />
+          <root url="phar://$MODULE_DIR$/php/test.phar/" />
+        </CLASSES>
+        <SOURCES>
+          <root url="phar://$MODULE_DIR$/php/PHPExcel_1.7.9.phar/" />
+          <root url="phar://$MODULE_DIR$/php/test.phar/" />
+        </SOURCES>
+      </library>
+    </orderEntry>
+  </component>
+</module>

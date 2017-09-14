@@ -12,6 +12,5 @@ require_once __DIR__ . DIRECTORY_SEPARATOR . 'Struct.php';
 
 interface Transformable
 {
-    function transform(Transformer $transformer) : Transformation;
-    function fillStruct(Struct $struct) : Struct;
+    function transformTo(Struct $transformation) : void;
 }

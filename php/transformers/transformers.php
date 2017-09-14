@@ -1,9 +1,11 @@
 <?php
 namespace transformers;
 require_once __DIR__ . DIRECTORY_SEPARATOR . 'Person.php';
-require_once __DIR__ . DIRECTORY_SEPARATOR . 'PersonHTML.php';
+require_once __DIR__ . DIRECTORY_SEPARATOR . 'PersonHTMLTransformation.php';
 
 $person = new Person("John", "Doo");
-$html = $person->transform(new PersonHTML());
+$htmldata = new PersonHTMLData();
+$person->transformTo($htmldata);
 
-print $html->render();
+$html = new PersonHTMLTransformation();
+$html->render($htmldata);

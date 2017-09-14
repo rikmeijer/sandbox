@@ -6,23 +6,22 @@
  */
 
 namespace transformers;
-require_once __DIR__ . DIRECTORY_SEPARATOR . 'Transformation.php';
+require_once __DIR__ . DIRECTORY_SEPARATOR . 'Struct.php';
 
 
-class PersonHTMLTransformation implements Transformation
-{
-    /**
-     * @var PersonHTMLData
-     */
-    private $data;
+class PersonHTMLData extends Struct {
+    protected $firstname;
+    protected $lastname;
 
-    public function __construct(PersonHTMLData $data)
-    {
-        $this->data = $data;
+    public function map(string $identifier, $value) {
+        $this->$identifier = $value;
     }
+}
 
-    public function render() {
-        print '<div>' . $this->data->firstname . '<br />' . $this->data->lastname . '</div>';
+class PersonHTMLTransformation
+{
+    public function render(PersonHTMLData $data) {
+        print '<div>' . $data->firstname . '<br />' . $data->lastname . '</div>';
     }
 
 }

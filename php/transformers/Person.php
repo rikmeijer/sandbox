@@ -17,23 +17,9 @@ class Person implements Transformable
         $this->lastname = $lastname;
     }
 
-    function transform(Transformer $transformer): Transformation
+    function transformTo(Struct $transformation): void
     {
-        return $transformer->transform($this);
-    }
-
-    function fillStruct(Struct $struct): Struct
-    {
-        foreach (get_object_vars($struct) as $structPropertyIdentifier => $value) {
-            switch ($structPropertyIdentifier) {
-                case 'firstname':
-                    $struct->firstname = $this->firstname;
-                    break;
-                case 'lastname':
-                    $struct->lastname = $this->lastname;
-                    break;
-            }
-        }
-        return $struct;
+        $transformation->map('firstname', $this->firstname);
+        $transformation->map('lastname', $this->lastname);
     }
 }

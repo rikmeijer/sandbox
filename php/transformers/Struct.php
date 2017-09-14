@@ -7,23 +7,13 @@
 
 namespace transformers;
 
-class Struct
+abstract class Struct
 {
-    public function __construct()
-    {
-        $properties = get_object_vars($this);
-        foreach (func_get_args() as $value) {
-            $property = array_shift($properties);
-            $this->$property = $value;
-        }
+    public function __get(string $identifier) {
+        return $this->$identifier;
     }
-
-    public function __get($property)
-    {
+    public function __set(string $identifier, $value) {
+        $this->map($identifier, $value);
     }
-
-    public function __set($property, $value)
-    {
-    }
-
+    abstract public function map(string $identifier, $value);
 }
